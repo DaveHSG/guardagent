@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuardAgent — Cross-Border Marketing Reviewer</title>
+<style>
+  :root{
+    --ink:#0b1f2a;
+    --paper:#f3efe7;
+    --panel:#ffffff;
+    --line:#d9d2c4;
+    --muted:#6b7a82;
+    --brass:#b3892f;      /* signature accent */
+    --brass-soft:#ede1c4;
+    --red:#b23a3a;   --red-bg:#f7e6e4;
+    --amber:#b8860b; --amber-bg:#f8efd6;
+    --green:#3d7a52; --green-bg:#e4f0e6;
+    --shadow:0 1px 0 var(--line), 0 12px 30px -18px rgba(11,31,42,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;}
+  .mono{font-family:"SFMono-Regular",ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px;}
+
+  /* Masthead */
+  header.mast{border-bottom:2px solid var(--ink);margin:0 0 26px;padding:26px 0 16px;}
+  .mast-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:baseline;gap:14px;}
+  .seal{width:34px;height:34px;flex:none;transform:translateY(6px);}
+  h1{font-size:30px;letter-spacing:.3px;margin:0;font-weight:600;}
+  h1 .sub{color:var(--brass);}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--muted);}
+  .tagline{margin:8px 0 0;color:var(--muted);font-size:15px;max-width:60ch;}
+
+  /* Layout */
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start;}
+  @media(max-width:840px){.grid{grid-template-columns:1fr;}}
+
+  .card{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);}
+  .card h2{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+    margin:0;padding:14px 18px;border-bottom:1px solid var(--line);font-family:var(--mono);font-weight:600;}
+  .pad{padding:18px;}
+
+  label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 6px;font-family:var(--mono);}
+  select,textarea{width:100%;border:1px solid var(--line);background:#fbf9f4;color:var(--ink);
+    font-size:15px;padding:10px 12px;border-radius:2px;font-family:inherit;}
+  select:focus,textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:var(--brass);}
+  textarea{min-height:230px;resize:vertical;line-height:1.5;}
+  .field{margin-bottom:16px;}
+
+  .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fbf9f4;
+    font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;
+    padding:12px 16px;cursor:pointer;border-radius:2px;width:100%;transition:transform .05s ease;}
+  .btn:hover{background:#123141;}
+  .btn:active{transform:translateY(1px);}
+  .btn.ghost{background:transparent;color:var(--ink);margin-top:8px;}
+  .btn.ghost:hover{background:var(--brass-soft);}
+
+  .samples{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.04em;border:1px dashed var(--line);
+    background:#fbf9f4;padding:6px 9px;border-radius:2px;cursor:pointer;color:var(--muted);}
+  .chip:hover{border-color:var(--brass);color:var(--ink);}
+
+  /* Results */
+  .scorebar{display:flex;align-items:center;gap:16px;padding:16px 18px;border-bottom:1px solid var(--line);}
+  .verdict{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    padding:6px 12px;border-radius:2px;font-weight:600;white-space:nowrap;}
+  .verdict.red{background:var(--red-bg);color:var(--red);}
+  .verdict.amber{background:var(--amber-bg);color:var(--amber);}
+  .verdict.green{background:var(--green-bg);color:var(--green);}
+  .scoremeta{font-size:14px;color:var(--muted);}
+  .scoremeta b{color:var(--ink);}
+
+  .counts{margin-left:auto;display:flex;gap:14px;font-family:var(--mono);font-size:13px;}
+  .counts span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .dot.r{background:var(--red);}.dot.a{background:var(--amber);}.dot.g{background:var(--green);}
+
+  .finding{border-bottom:1px solid var(--line);padding:16px 18px;display:grid;
+    grid-template-columns:14px 1fr;gap:14px;}
+  .finding:last-child{border-bottom:none;}
+  .rail{width:6px;border-radius:3px;height:100%;}
+  .rail.red{background:var(--red);}.rail.amber{background:var(--amber);}.rail.green{background:var(--green);}
+  .sev{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;}
+  .sev.red{color:var(--red);}.sev.amber{color:var(--amber);}.sev.green{color:var(--green);}
+  .trigger{background:#fbf5e9;border-left:3px solid var(--brass);padding:6px 10px;margin:8px 0;
+    font-style:italic;font-size:14.5px;color:#4a3d1f;}
+  .breach{font-size:15px;margin:6px 0 2px;}
+  .breach b{color:var(--ink);}
+  .action{font-size:14px;color:var(--muted);margin-top:6px;}
+  .action::before{content:"→ ";color:var(--brass);font-weight:700;}
+  .reg{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--brass);text-transform:uppercase;}
+
+  .empty{padding:48px 24px;text-align:center;color:var(--muted);}
+  .empty svg{opacity:.5;margin-bottom:12px;}
+
+  .disclaimer{margin-top:22px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);
+    padding-top:14px;line-height:1.5;}
+  .rulecount{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:10px;letter-spacing:.05em;}
+
+  /* Layer sections (deterministic / AI / live register) */
+  .layer{margin-top:22px;}
+  .layer-head{display:flex;align-items:center;gap:10px;padding:12px 18px;border-top:2px solid var(--ink);
+    background:#fbf9f4;}
+  .layer-head .tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    padding:3px 8px;border-radius:2px;background:var(--brass-soft);color:#5b451c;}
+  .layer-head h3{margin:0;font-size:14px;letter-spacing:.05em;}
+  .layer-head .src{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .layer-body{padding:14px 18px;}
+  .llm-item{border-left:3px solid var(--line);padding:8px 12px;margin-bottom:10px;background:#fbf9f4;}
+  .llm-item.red{border-color:var(--red);} .llm-item.amber{border-color:var(--amber);} .llm-item.green{border-color:var(--green);}
+  .llm-obs{font-size:14.5px;margin-bottom:3px;}
+  .llm-reason{font-size:13px;color:var(--muted);}
+  .muted-note{color:var(--muted);font-size:13.5px;}
+  .spinner-line{font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .reg-row{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);
+    font-size:14px;}
+  .reg-row:last-child{border-bottom:none;}
+  .reg-status{font-family:var(--mono);font-size:11px;text-transform:uppercase;padding:2px 8px;border-radius:2px;}
+  .reg-status.authorised{background:var(--green-bg);color:var(--green);}
+  .reg-status.other{background:var(--amber-bg);color:var(--amber);}
+  .err-box{background:var(--red-bg);color:var(--red);padding:10px 12px;font-size:13.5px;border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="mast-row">
+      <div class="brand">
+        <svg class="seal" viewBox="0 0 40 40" fill="none">
+          <path d="M20 2 L34 8 V20 C34 30 27 36 20 38 C13 36 6 30 6 20 V8 Z"
+                stroke="#0b1f2a" stroke-width="2" fill="#ede1c4"/>
+          <path d="M20 11 L20 27 M13 18 L20 11 L27 18" stroke="#b3892f" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div>
+          <div class="kicker">Sales &amp; Distribution · Pre-Clearance</div>
+          <h1>Guard<span class="sub">Agent</span></h1>
+        </div>
+      </div>
+      <div class="kicker">Prototype · v0.1</div>
+    </div>
+    <p class="tagline">Screen client-facing FX &amp; rates commentary against cross-border
+      marketing rules before you hit send. Pick the client's jurisdiction and classification,
+      paste the draft, and get localized traffic-light feedback.</p>
+  </header>
+
+  <div class="grid">
+    <!-- INPUT -->
+    <section class="card">
+      <h2>Draft &amp; Context</h2>
+      <div class="pad">
+        <div class="field">
+          <label for="jur">Client jurisdiction</label>
+          <select id="jur">
+            <option value="CH">Switzerland — FINMA (FinSA)</option>
+            <option value="DE">Germany — BaFin (MiFID II)</option>
+            <option value="FR">France — AMF (MiFID II)</option>
+            <option value="UK">United Kingdom — FCA</option>
+            <option value="SG">Singapore — MAS</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cls">Client classification</label>
+          <select id="cls">
+            <option value="retail">Retail</option>
+            <option value="professional">Professional / Institutional</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="draft">Draft material (email, newsletter, pitch text)</label>
+          <textarea id="draft" placeholder="Paste your market commentary or product email here…"></textarea>
+          <div class="samples">
+            <span class="chip" data-s="1">Load: DCD hard-sell email</span>
+            <span class="chip" data-s="2">Load: yield newsletter</span>
+            <span class="chip" data-s="3">Load: clean SNB macro note</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="firm">Issuer / distributing firm (optional — live UK check)</label>
+          <input id="firm" type="text" placeholder="e.g. Barclays Bank UK PLC">
+          <div class="muted-note" style="margin-top:6px;">Checks the FCA Financial Services Register in real time. Leave blank to skip.</div>
+        </div>
+        <button class="btn" id="run">Run compliance review</button>
+        <button class="btn ghost" id="clear">Clear</button>
+        <div class="rulecount" id="rulecount"></div>
+      </div>
+    </section>
+
+    <!-- OUTPUT -->
+    <section class="card" id="panel">
+      <h2>Compliance Dashboard · Layer 1 — Rule Engine (instant, offline)</h2>
+      <div id="out">
+        <div class="empty">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#6b7a82" stroke-width="1.4">
+            <path d="M12 2 L20 5 V11 C20 16 16.4 19.5 12 21 C7.6 19.5 4 16 4 11 V5 Z"/>
+            <path d="M9 12 l2 2 l4 -4"/>
+          </svg>
+          <div>Run a review to see localized, traffic-light feedback.</div>
+        </div>
+      </div>
+
+      <div class="layer" id="llmLayer" style="display:none;">
+        <div class="layer-head">
+          <span class="tag">Layer 2</span>
+          <h3>AI Semantic Review</h3>
+          <span class="src">Groq · Llama 3.3 70B</span>
+        </div>
+        <div class="layer-body" id="llmOut"></div>
+      </div>
+
+      <div class="layer" id="regLayer" style="display:none;">
+        <div class="layer-head">
+          <span class="tag">Layer 3</span>
+          <h3>Live Registration Check</h3>
+          <span class="src">FCA Financial Services Register</span>
+        </div>
+        <div class="layer-body" id="regOut"></div>
+      </div>
+    </section>
+  </div>
+
+  <p class="disclaimer">
+    <b>How this works, honestly.</b> Layer 1 is a deterministic keyword engine over a small
+    illustrative rule set — instant, offline, fully reproducible. Layer 2 sends the draft to an
+    LLM to catch what keywords miss (tone, implied advice, missing context); it reasons over the
+    rule summaries it's given, it does not know today's regulations from memory, and it is not a
+    source of legal truth. Layer 3 is the only genuinely live regulatory data in this prototype —
+    a real-time query to the FCA's public Financial Services Register to check UK authorisation
+    status. There is no free API that returns marketing-rule text itself; that knowledge base is
+    maintained by Legal &amp; Compliance and would need to stay human-owned even in production.
+    Nothing here is legal advice, and every red or amber flag should route to a human reviewer.
+  </p>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   REGULATORY KNOWLEDGE BASE (illustrative)
+   Each rule = a pattern + the jurisdictions/classes it applies to.
+   In production this is a maintained RAG index; here it's deterministic
+   so the demo is fully reproducible offline.
+   ───────────────────────────────────────────────────────────── */
+const JUR = {
+  CH:{name:"Switzerland", reg:"FINMA (FinSA)"},
+  DE:{name:"Germany",     reg:"BaFin (MiFID II)"},
+  FR:{name:"France",      reg:"AMF (MiFID II)"},
+  UK:{name:"United Kingdom", reg:"FCA"},
+  SG:{name:"Singapore",   reg:"MAS"}
+};
+
+// helper: build case-insensitive regex from list of phrases
+const rx = (arr)=> new RegExp("("+arr.map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")","ig");
+
+const RULES = [
+  /* 1. Direct solicitation / recommendation of a product */
+  {
+    id:"solicit",
+    pattern: rx(["we highly recommend","we recommend buying","you should buy","strongly advise you to buy",
+                 "we advise buying","act now","buy our new","invest now","don't miss","limited-time offer",
+                 "guaranteed return","guaranteed yield","risk-free"]),
+    severity:{ retail:"red", professional:"amber" },
+    appliesTo:["CH","DE","FR","UK","SG"],
+    breach:(j,c)=> c==="retail"
+      ? `${JUR[j].reg}: direct solicitation / financial promotion of a product to a non-professional client. May constitute unauthorised cross-border distribution of an unregistered structured product.`
+      : `${JUR[j].reg}: promotional language toward a professional client is lower-risk, but "recommend/buy" wording still triggers suitability and record-keeping obligations.`,
+    action:(j,c)=> c==="retail"
+      ? "Reframe as general market commentary, or attach the locally approved prospectus / KID and route to Compliance for pre-clearance."
+      : "Soften to non-advisory framing or confirm a documented suitability basis exists."
+  },
+
+  /* 2. Structured / exotic product named without KID/prospectus */
+  {
+    id:"structured",
+    pattern: rx(["structured note","dual currency","dual-currency","DCD","yield enhancement","yield-enhancement",
+                 "autocallable","reverse convertible","barrier option","exotic","accumulator","range accrual",
+                 "capital protected note","structured product"]),
+    severity:{ retail:"red", professional:"amber" },
+    appliesTo:["DE","FR","UK","SG","CH"],
+    breach:(j,c)=>{
+      if(j==="DE"||j==="FR") return `${JUR[j].reg} / PRIIPs: a packaged/structured product is referenced. Marketing to ${c} clients requires a PRIIPs KID; retail distribution needs local registration.`;
+      if(j==="SG") return `MAS: structured product references trigger Securities & Futures Act marketing restrictions; retail requires a lodged prospectus / product highlights sheet.`;
+      if(j==="CH") return `FINMA (FinSA): structured products require a Key Information Document (KID) before retail offering.`;
+      return `${JUR[j].reg} / Consumer Duty: structured product must carry a compliant risk disclosure and target-market statement.`;
+    },
+    action:(j,c)=> c==="retail"
+      ? "Confirm a KID / PRIIPs document exists for this jurisdiction and link it; if none, remove the product reference for retail distribution."
+      : "Confirm product is registered for professional distribution in-market and attach term sheet."
+  },
+
+  /* 3. Yield / return mentioned without balancing risk language */
+  {
+    id:"unbalanced",
+    pattern: rx(["yield","return of","returns of","% p.a.","percent per annum","coupon","interest rate of",
+                 "attractive returns","enhanced yield","high yield"]),
+    riskWords:["risk","volatility","capital at risk","may lose","downside","not guaranteed","past performance"],
+    severity:{ retail:"amber", professional:"amber" },
+    appliesTo:["UK","DE","FR","SG","CH"],
+    conditional:true, // only fires if riskWords absent
+    breach:(j,c)=> j==="UK"
+      ? "FCA (Consumer Duty): return figures presented without a fair, clear and non-misleading balance of the associated risks."
+      : `${JUR[j].reg}: yield/return highlighted without balanced risk presentation — promotion may be misleading.`,
+    action:()=> "Insert the standard fixed-income / market-risk disclosure paragraph so benefits and risks are balanced."
+  },
+
+  /* 4. Reverse-solicitation trap: outbound push into MiFID markets */
+  {
+    id:"reverse",
+    pattern: rx(["reaching out","following up on our offer","as discussed, here is the product",
+                 "we wanted to introduce","please find our product offer","proactively"]),
+    severity:{ retail:"red", professional:"amber" },
+    appliesTo:["DE","FR"],
+    breach:(j,c)=> `${JUR[j].reg}: outbound, bank-initiated contact undercuts any "reverse solicitation" defence. Cross-border provision of investment services into the EU without a passport/registration is restricted.`,
+    action:()=> "Confirm a valid cross-border licence/passport or an genuine client-initiated (reverse solicitation) basis; otherwise do not send outbound."
+  },
+
+  /* 5. Missing disclaimer entirely (whole-document check) */
+  {
+    id:"nodisclaimer",
+    whole:true,
+    disclaimerCues:["for professional","not investment advice","for information only","capital at risk",
+                    "risk disclosure","past performance is not","this is a marketing communication",
+                    "not a recommendation"],
+    severity:{ retail:"amber", professional:"green" },
+    appliesTo:["CH","DE","FR","UK","SG"],
+    breach:(j,c)=> `${JUR[j].reg}: no marketing-communication disclaimer or advice disclaimer detected in the document.`,
+    action:()=> "Append the standard marketing-communication footer (\"This is a marketing communication and not investment advice…\")."
+  }
+];
+
+/* SAMPLES */
+const SAMPLES = {
+1:`Dear Mr. Weber,
+
+We highly recommend buying our new EUR/CHF dual currency note. With an enhanced yield of 7.2% p.a., this is a limited-time offer you don't want to miss. Act now to lock in these attractive returns before the SNB meeting.
+
+Best regards,
+FX Structuring Desk`,
+2:`Weekly Rates Digest
+
+Front-end swap spreads continue to grind tighter. Our yield-enhancement strategy is currently generating a coupon of 5.4% p.a. for clients seeking returns above money-market levels. The autocallable structure resets quarterly.
+
+We think this remains an attractive entry point.`,
+3:`SNB Watch — Macro Note
+
+The Swiss National Bank held its policy rate unchanged at its latest meeting, citing easing inflation and a firm franc. We expect the SNB to remain data-dependent through the summer. Eurozone front-end pricing now implies one further cut before year-end.
+
+This is a marketing communication and not investment advice. Capital at risk.`
+};
+
+/* ENGINE */
+function review(text, jur, cls){
+  const findings=[];
+  const lower=text.toLowerCase();
+
+  for(const r of RULES){
+    if(!r.appliesTo.includes(jur)) continue;
+
+    // whole-document disclaimer check
+    if(r.whole){
+      const has = r.disclaimerCues.some(c=>lower.includes(c));
+      if(!has){
+        findings.push(mk(r, "(document has no disclaimer)", jur, cls));
+      }
+      continue;
+    }
+
+    const matches = text.match(r.pattern);
+    if(!matches) continue;
+
+    // conditional rule: only fire if the balancing risk words are absent
+    if(r.conditional){
+      const balanced = r.riskWords.some(w=>lower.includes(w));
+      if(balanced) continue;
+    }
+
+    // dedupe trigger phrase, take first hit
+    const trig = matches[0];
+    findings.push(mk(r, trig, jur, cls));
+  }
+
+  // Always surface a green "clean" line if genuinely nothing serious fired
+  if(!findings.some(f=>f.sev==="red"||f.sev==="amber")){
+    findings.push({
+      sev:"green",
+      trigger:null,
+      reg:"Global",
+      breach:"General macroeconomic commentary. No product solicitation, structured-product reference, or unbalanced return claim detected for this jurisdiction and client type.",
+      action:"No action needed — safe to send as market commentary."
+    });
+  }
+  return findings;
+}
+
+function mk(rule, trigger, jur, cls){
+  return {
+    sev: rule.severity[cls],
+    trigger,
+    reg: JUR[jur].reg,
+    breach: rule.breach(jur, cls),
+    action: rule.action ? rule.action(jur, cls) : ""
+  };
+}
+
+/* RENDER */
+const SEV_LABEL={red:"High Risk",amber:"Medium Risk",green:"Low Risk"};
+const SEV_RANK={red:0,amber:1,green:2};
+
+function render(findings){
+  findings.sort((a,b)=>SEV_RANK[a.sev]-SEV_RANK[b.sev]);
+  const counts={red:0,amber:0,green:0};
+  findings.forEach(f=>counts[f.sev]++);
+
+  let verdict, vclass, vtext;
+  if(counts.red){ verdict="Do not send"; vclass="red"; vtext="Blocking issues found — route to Compliance."; }
+  else if(counts.amber){ verdict="Amend before sending"; vclass="amber"; vtext="Fixable issues — apply required actions."; }
+  else { verdict="Cleared"; vclass="green"; vtext="No blocking issues for this jurisdiction & client type."; }
+
+  let html = `
+    <div class="scorebar">
+      <span class="verdict ${vclass}">${verdict}</span>
+      <span class="scoremeta"><b>${JUR[curJur].name}</b> · ${curCls==="retail"?"Retail":"Professional"} client — ${vtext}</span>
+      <span class="counts">
+        <span><i class="dot r"></i>${counts.red}</span>
+        <span><i class="dot a"></i>${counts.amber}</span>
+        <span><i class="dot g"></i>${counts.green}</span>
+      </span>
+    </div>`;
+
+  for(const f of findings){
+    html += `
+      <div class="finding">
+        <div class="rail ${f.sev}"></div>
+        <div>
+          <div class="sev ${f.sev}">● ${SEV_LABEL[f.sev]}</div>
+          ${f.trigger ? `<div class="trigger">“${escapeHtml(f.trigger)}”</div>`:""}
+          <div class="reg">${f.reg}</div>
+          <div class="breach">${escapeHtml(f.breach)}</div>
+          ${f.action ? `<div class="action">${escapeHtml(f.action)}</div>`:""}
+        </div>
+      </div>`;
+  }
+  document.getElementById("out").innerHTML = html;
+}
+
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+
+/* WIRING */
+let curJur="CH", curCls="retail";
+const $=id=>document.getElementById(id);
+
+$("run").addEventListener("click", async ()=>{
+  const text=$("draft").value.trim();
+  curJur=$("jur").value; curCls=$("cls").value;
+  const firm=$("firm").value.trim();
+
+  if(!text){
+    $("out").innerHTML=`<div class="empty"><div>Paste a draft first, then run the review.</div></div>`;
+    $("llmLayer").style.display="none";
+    $("regLayer").style.display="none";
+    return;
+  }
+
+  // Layer 1: deterministic rule engine — instant, fully offline
+  render(review(text,curJur,curCls));
+
+  // Layer 2: AI semantic review (server-side call, key never touches the browser)
+  $("llmLayer").style.display="block";
+  $("llmOut").innerHTML = `<div class="spinner-line">Running semantic review…</div>`;
+  fetchLLMReview(text, curJur, curCls);
+
+  // Layer 3: live FCA register check — only if a firm name was given
+  if(firm){
+    $("regLayer").style.display="block";
+    $("regOut").innerHTML = `<div class="spinner-line">Querying FCA register…</div>`;
+    fetchRegisterCheck(firm);
+  } else {
+    $("regLayer").style.display="none";
+  }
+});
+
+async function fetchLLMReview(text, jurisdiction, classification){
+  try{
+    const r = await fetch("/api/review", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ text, jurisdiction, classification })
+    });
+    const data = await r.json();
+    if(!r.ok){
+      $("llmOut").innerHTML = `<div class="err-box">${escapeHtml(data.error || "The AI review layer is unavailable.")}</div>`;
+      return;
+    }
+    renderLLM(data.findings || []);
+  }catch(e){
+    $("llmOut").innerHTML = `<div class="err-box">Could not reach the AI review layer. It may not be deployed yet — see README.</div>`;
+  }
+}
+
+function renderLLM(findings){
+  if(!findings.length){
+    $("llmOut").innerHTML = `<div class="muted-note">No additional risks surfaced beyond the rule engine's findings.</div>`;
+    return;
+  }
+  const rank={red:0,amber:1,green:2};
+  findings.sort((a,b)=>(rank[a.severity]??3)-(rank[b.severity]??3));
+  $("llmOut").innerHTML = findings.map(f=>`
+    <div class="llm-item ${f.severity||""}">
+      <div class="llm-obs">${escapeHtml(f.observation||"")}</div>
+      <div class="llm-reason">${escapeHtml(f.reason||"")}</div>
+    </div>`).join("");
+}
+
+async function fetchRegisterCheck(firmName){
+  try{
+    const r = await fetch("/api/register-check", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ firmName })
+    });
+    const data = await r.json();
+    if(!r.ok){
+      $("regOut").innerHTML = `<div class="err-box">${escapeHtml(data.error || "The register check is unavailable.")}</div>`;
+      return;
+    }
+    renderRegister(data.results || []);
+  }catch(e){
+    $("regOut").innerHTML = `<div class="err-box">Could not reach the register check. It may not be deployed yet — see README.</div>`;
+  }
+}
+
+function renderRegister(results){
+  if(!results.length){
+    $("regOut").innerHTML = `<div class="muted-note">No matching firm found on the FCA Financial Services Register.</div>`;
+    return;
+  }
+  $("regOut").innerHTML = results.map(r=>`
+    <div class="reg-row">
+      <span class="reg-status ${/^author/i.test(r.status||"")?"authorised":"other"}">${escapeHtml(r.status||"unknown")}</span>
+      <span>${escapeHtml(r.name||"")}</span>
+      <span class="muted-note mono">FRN ${escapeHtml(String(r.referenceNumber||"—"))}</span>
+    </div>`).join("");
+}
+
+$("clear").addEventListener("click",()=>{
+  $("draft").value="";
+  $("out").innerHTML=`<div class="empty"><div>Cleared. Paste a new draft to review.</div></div>`;
+});
+
+document.querySelectorAll(".chip").forEach(c=>{
+  c.addEventListener("click",()=>{ $("draft").value=SAMPLES[c.dataset.s]; });
+});
+
+$("rulecount").textContent = `Knowledge base: ${RULES.length} rule families × ${Object.keys(JUR).length} jurisdictions loaded.`;
+</script>
+</body>
+</html>
