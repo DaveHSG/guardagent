@@ -22,7 +22,7 @@
   html,body{margin:0;background:var(--paper);color:var(--ink);
     font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;}
   .mono{font-family:"SFMono-Regular",ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px 80px;}
 
   header.mast{border-bottom:2px solid var(--ink);margin:0 0 26px;padding:26px 0 16px;}
   .mast-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;}
@@ -32,10 +32,10 @@
   h1 .sub{color:var(--brass);}
   .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
     color:var(--muted);}
-  .tagline{margin:8px 0 0;color:var(--muted);font-size:15px;max-width:60ch;}
+  .tagline{margin:8px 0 0;color:var(--muted);font-size:15px;max-width:64ch;}
 
-  .grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start;}
-  @media(max-width:840px){.grid{grid-template-columns:1fr;}}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
 
   .card{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);}
   .card h2{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
@@ -47,8 +47,9 @@
   select,textarea,input[type="text"]{width:100%;border:1px solid var(--line);background:#fbf9f4;color:var(--ink);
     font-size:15px;padding:10px 12px;border-radius:2px;font-family:inherit;}
   select:focus,textarea:focus,input:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:var(--brass);}
-  textarea{min-height:230px;resize:vertical;line-height:1.5;}
+  textarea{min-height:210px;resize:vertical;line-height:1.5;}
   .field{margin-bottom:16px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
   .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fbf9f4;
     font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;
@@ -57,18 +58,21 @@
   .btn:active{transform:translateY(1px);}
   .btn.ghost{background:transparent;color:var(--ink);margin-top:8px;}
   .btn.ghost:hover{background:var(--brass-soft);}
+  .btn.small{width:auto;padding:8px 12px;font-size:11px;}
 
   .samples{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
   .chip{font-family:var(--mono);font-size:11px;letter-spacing:.04em;border:1px dashed var(--line);
     background:#fbf9f4;padding:6px 9px;border-radius:2px;cursor:pointer;color:var(--muted);}
   .chip:hover{border-color:var(--brass);color:var(--ink);}
 
-  .scorebar{display:flex;align-items:center;gap:16px;padding:16px 18px;border-bottom:1px solid var(--line);}
+  .scorebar{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
   .verdict{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
     padding:6px 12px;border-radius:2px;font-weight:600;white-space:nowrap;}
   .verdict.red{background:var(--red-bg);color:var(--red);}
   .verdict.amber{background:var(--amber-bg);color:var(--amber);}
   .verdict.green{background:var(--green-bg);color:var(--green);}
+  .riskscore{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    padding:6px 10px;border-radius:2px;background:var(--brass-soft);color:#5b451c;white-space:nowrap;}
   .scoremeta{font-size:14px;color:var(--muted);}
   .scoremeta b{color:var(--ink);}
 
@@ -101,7 +105,7 @@
 
   .layer{margin-top:22px;}
   .layer-head{display:flex;align-items:center;gap:10px;padding:12px 18px;border-top:2px solid var(--ink);
-    background:#fbf9f4;}
+    background:#fbf9f4;flex-wrap:wrap;}
   .layer-head .tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
     padding:3px 8px;border-radius:2px;background:var(--brass-soft);color:#5b451c;}
   .layer-head h3{margin:0;font-size:14px;letter-spacing:.05em;}
@@ -120,6 +124,19 @@
   .reg-status.authorised{background:var(--green-bg);color:var(--green);}
   .reg-status.other{background:var(--amber-bg);color:var(--amber);}
   .err-box{background:var(--red-bg);color:var(--red);padding:10px 12px;font-size:13.5px;border-radius:2px;word-break:break-word;}
+
+  .hist-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .hist-table th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--ink);
+    white-space:nowrap;}
+  .hist-table td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .hist-badge{font-family:var(--mono);font-size:10px;text-transform:uppercase;padding:2px 7px;
+    border-radius:2px;white-space:nowrap;}
+  .hist-badge.red{background:var(--red-bg);color:var(--red);}
+  .hist-badge.amber{background:var(--amber-bg);color:var(--amber);}
+  .hist-badge.green{background:var(--green-bg);color:var(--green);}
+  .hist-snippet{color:var(--muted);font-style:italic;max-width:260px;}
+  .hist-scroll{max-width:100%;overflow-x:auto;}
 </style>
 </head>
 <body>
@@ -138,11 +155,12 @@
           <h1>Guard<span class="sub">Agent</span></h1>
         </div>
       </div>
-      <div class="kicker">Prototype · v0.2</div>
+      <div class="kicker">Prototype · v0.3</div>
     </div>
     <p class="tagline">Screen client-facing FX &amp; rates commentary against cross-border
-      marketing rules before you hit send. Pick the client's jurisdiction and classification,
-      paste the draft, and get localized traffic-light feedback.</p>
+      marketing rules before you hit send — classified by client sophistication, use case, and
+      risk, reviewed by a jurisdiction-specialist AI agent, and logged for audit and future
+      curation.</p>
   </header>
 
   <div class="grid">
@@ -150,23 +168,60 @@
     <section class="card">
       <h2>Draft &amp; Context</h2>
       <div class="pad">
-        <div class="field">
-          <label for="jur">Client jurisdiction</label>
-          <select id="jur">
-            <option value="CH">Switzerland — FINMA (FinSA)</option>
-            <option value="DE">Germany — BaFin (MiFID II)</option>
-            <option value="FR">France — AMF (MiFID II)</option>
-            <option value="UK">United Kingdom — FCA</option>
-            <option value="SG">Singapore — MAS</option>
-          </select>
+        <div class="field-row">
+          <div class="field">
+            <label for="jur">Client jurisdiction</label>
+            <select id="jur">
+              <option value="CH">Switzerland — FINMA</option>
+              <option value="DE">Germany — BaFin</option>
+              <option value="FR">France — AMF</option>
+              <option value="UK">United Kingdom — FCA</option>
+              <option value="SG">Singapore — MAS</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cls">Client classification</label>
+            <select id="cls">
+              <option value="retail">Retail</option>
+              <option value="professional">Professional / Institutional</option>
+            </select>
+          </div>
         </div>
-        <div class="field">
-          <label for="cls">Client classification</label>
-          <select id="cls">
-            <option value="retail">Retail</option>
-            <option value="professional">Professional / Institutional</option>
-          </select>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="soph">Client sophistication</label>
+            <select id="soph">
+              <option value="novice">Novice retail</option>
+              <option value="experienced">Experienced retail</option>
+              <option value="professional">Professional</option>
+              <option value="institutional">Institutional</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="useCase">Use case</label>
+            <select id="useCase">
+              <option value="newsletter">Newsletter (mass)</option>
+              <option value="one_to_one">One-to-one email</option>
+              <option value="pitch">Pitch deck</option>
+              <option value="social">Social media post</option>
+            </select>
+          </div>
         </div>
+
+        <div class="field">
+          <label for="domicile">Product domicile (perimeter check)</label>
+          <select id="domicile">
+            <option value="NA">Not a packaged product / N/A</option>
+            <option value="CH">Switzerland</option>
+            <option value="DE">Germany</option>
+            <option value="FR">France</option>
+            <option value="UK">United Kingdom</option>
+            <option value="SG">Singapore</option>
+          </select>
+          <div class="muted-note" style="margin-top:6px;">Where the product is registered — checked against client jurisdiction for cross-border/passporting risk.</div>
+        </div>
+
         <div class="field">
           <label for="draft">Draft material (email, newsletter, pitch text)</label>
           <textarea id="draft" placeholder="Paste your market commentary or product email here…"></textarea>
@@ -204,7 +259,7 @@
         <div class="layer-head">
           <span class="tag">Layer 2</span>
           <h3>AI Semantic Review</h3>
-          <span class="src">Groq · GPT-OSS 120B</span>
+          <span class="src" id="llmSrc">Groq · GPT-OSS 120B</span>
         </div>
         <div class="layer-body" id="llmOut"></div>
       </div>
@@ -217,31 +272,42 @@
         </div>
         <div class="layer-body" id="regOut"></div>
       </div>
+
+      <div class="layer">
+        <div class="layer-head">
+          <span class="tag">Tracker</span>
+          <h3>Historical reviews (audit trail)</h3>
+          <button class="btn small" id="refreshHist">Refresh</button>
+        </div>
+        <div class="layer-body hist-scroll" id="histOut"></div>
+      </div>
     </section>
   </div>
 
   <p class="disclaimer">
     <b>How this works, honestly.</b> Layer 1 is a deterministic keyword engine over a small
-    illustrative rule set — instant, offline, fully reproducible. Layer 2 sends the draft to an
-    LLM to catch what keywords miss (tone, implied advice, missing context); it reasons over the
-    rule summaries it's given, it does not know today's regulations from memory, and it is not a
-    source of legal truth. Layer 3 is the only genuinely live regulatory data in this prototype —
-    a real-time query to the FCA's public Financial Services Register to check UK authorisation
-    status. There is no free API that returns marketing-rule text itself; that knowledge base is
-    maintained by Legal &amp; Compliance and would need to stay human-owned even in production.
-    Nothing here is legal advice, and every red or amber flag should route to a human reviewer.
+    illustrative rule set, now including a cross-border perimeter check between client
+    jurisdiction and product domicile — instant, offline, fully reproducible. Layer 2 routes the
+    draft to a jurisdiction-specialist AI agent, given the client's sophistication and the use
+    case, to catch what keywords miss; it reasons over the rule summaries it's given, it does not
+    know today's regulations from memory, and it is not a source of legal truth. Layer 3 is the
+    only genuinely live regulatory data here — a real-time FCA register check. The historical
+    tracker logs every review for audit purposes; curated past cases are meant to inform future
+    prompts as human-reviewed examples, not as an automatically self-updating model. Nothing here
+    is legal advice, and every red or amber flag should route to a human reviewer.
   </p>
 </div>
 
 <script>
-/* REGULATORY KNOWLEDGE BASE (illustrative) — deterministic so the demo is reproducible offline */
 const JUR = {
-  CH:{name:"Switzerland", reg:"FINMA (FinSA)"},
-  DE:{name:"Germany",     reg:"BaFin (MiFID II)"},
-  FR:{name:"France",      reg:"AMF (MiFID II)"},
+  CH:{name:"Switzerland", reg:"FINMA"},
+  DE:{name:"Germany",     reg:"BaFin"},
+  FR:{name:"France",      reg:"AMF"},
   UK:{name:"United Kingdom", reg:"FCA"},
   SG:{name:"Singapore",   reg:"MAS"}
 };
+const SOPH_LABEL = { novice:"Novice retail", experienced:"Experienced retail", professional:"Professional", institutional:"Institutional" };
+const USECASE_LABEL = { newsletter:"Newsletter", one_to_one:"One-to-one email", pitch:"Pitch deck", social:"Social post" };
 
 const rx = (arr)=> new RegExp("("+arr.map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")","ig");
 
@@ -331,9 +397,10 @@ The Swiss National Bank held its policy rate unchanged at its latest meeting, ci
 This is a marketing communication and not investment advice. Capital at risk.`
 };
 
-function review(text, jur, cls){
+function review(text, jur, cls, domicile){
   const findings=[];
   const lower=text.toLowerCase();
+  let structuredFired=false;
 
   for(const r of RULES){
     if(!r.appliesTo.includes(jur)) continue;
@@ -354,8 +421,23 @@ function review(text, jur, cls){
       if(balanced) continue;
     }
 
+    if(r.id === "structured") structuredFired = true;
+
     const trig = matches[0];
     findings.push(mk(r, trig, jur, cls));
+  }
+
+  // Perimeter / cross-border check: only meaningful if a product was actually
+  // referenced, and only if a domicile was specified and differs from the
+  // client's jurisdiction.
+  if(structuredFired && domicile && domicile !== "NA" && domicile !== jur){
+    findings.push({
+      sev:"red",
+      trigger:"(cross-border perimeter)",
+      reg:`${JUR[jur].reg} / ${JUR[domicile].reg}`,
+      breach:`Product is domiciled in ${JUR[domicile].name} but being marketed to a client in ${JUR[jur].name}. Cross-border distribution requires either a valid passporting arrangement, local registration in ${JUR[jur].name}, or a genuine reverse-solicitation basis — none of which is confirmed here.`,
+      action:"Confirm passporting/equivalence status or local registration before distribution; if neither applies, do not send."
+    });
   }
 
   if(!findings.some(f=>f.sev==="red"||f.sev==="amber")){
@@ -363,7 +445,7 @@ function review(text, jur, cls){
       sev:"green",
       trigger:null,
       reg:"Global",
-      breach:"General macroeconomic commentary. No product solicitation, structured-product reference, or unbalanced return claim detected for this jurisdiction and client type.",
+      breach:"General macroeconomic commentary. No product solicitation, structured-product reference, unbalanced return claim, or cross-border perimeter issue detected for this jurisdiction and client type.",
       action:"No action needed — safe to send as market commentary."
     });
   }
@@ -380,13 +462,28 @@ function mk(rule, trigger, jur, cls){
   };
 }
 
+// Risk score: weighted sum of findings, adjusted for client sophistication.
+// This is illustrative scoring for triage, not a calibrated statistical model.
+function computeRiskScore(findings, sophistication){
+  const counts={red:0,amber:0,green:0};
+  findings.forEach(f=>counts[f.sev]++);
+  let score = counts.red*3 + counts.amber*1;
+  if(sophistication === "novice") score = Math.round(score*1.5);
+  let band, bandClass;
+  if(score===0){ band="Minimal"; bandClass="green"; }
+  else if(score<=3){ band="Low"; bandClass="green"; }
+  else if(score<=7){ band="Moderate"; bandClass="amber"; }
+  else if(score<=12){ band="High"; bandClass="red"; }
+  else { band="Critical"; bandClass="red"; }
+  return { score, band, bandClass, counts };
+}
+
 const SEV_LABEL={red:"High Risk",amber:"Medium Risk",green:"Low Risk"};
 const SEV_RANK={red:0,amber:1,green:2};
 
-function render(findings){
+function render(findings, riskInfo){
   findings.sort((a,b)=>SEV_RANK[a.sev]-SEV_RANK[b.sev]);
-  const counts={red:0,amber:0,green:0};
-  findings.forEach(f=>counts[f.sev]++);
+  const counts = riskInfo.counts;
 
   let verdict, vclass, vtext;
   if(counts.red){ verdict="Do not send"; vclass="red"; vtext="Blocking issues found — route to Compliance."; }
@@ -396,7 +493,8 @@ function render(findings){
   let html = `
     <div class="scorebar">
       <span class="verdict ${vclass}">${verdict}</span>
-      <span class="scoremeta"><b>${JUR[curJur].name}</b> · ${curCls==="retail"?"Retail":"Professional"} client — ${vtext}</span>
+      <span class="riskscore">Risk score: ${riskInfo.score} (${riskInfo.band})</span>
+      <span class="scoremeta"><b>${JUR[curJur].name}</b> · ${curCls==="retail"?"Retail":"Professional"} · ${SOPH_LABEL[curSoph]} · ${USECASE_LABEL[curUseCase]} — ${vtext}</span>
       <span class="counts">
         <span><i class="dot r"></i>${counts.red}</span>
         <span><i class="dot a"></i>${counts.amber}</span>
@@ -422,12 +520,13 @@ function render(findings){
 
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 
-let curJur="CH", curCls="retail";
+let curJur="CH", curCls="retail", curSoph="experienced", curUseCase="newsletter", curDomicile="NA";
 const $=id=>document.getElementById(id);
 
 $("run").addEventListener("click", async ()=>{
   const text=$("draft").value.trim();
   curJur=$("jur").value; curCls=$("cls").value;
+  curSoph=$("soph").value; curUseCase=$("useCase").value; curDomicile=$("domicile").value;
   const firm=$("firm").value.trim();
 
   if(!text){
@@ -437,11 +536,14 @@ $("run").addEventListener("click", async ()=>{
     return;
   }
 
-  render(review(text,curJur,curCls));
+  const findings = review(text, curJur, curCls, curDomicile);
+  const riskInfo = computeRiskScore(findings, curSoph);
+  render(findings, riskInfo);
+  saveHistory(text, riskInfo);
 
   $("llmLayer").style.display="block";
   $("llmOut").innerHTML = `<div class="spinner-line">Running semantic review…</div>`;
-  fetchLLMReview(text, curJur, curCls);
+  fetchLLMReview(text, curJur, curCls, curSoph, curUseCase);
 
   if(firm){
     $("regLayer").style.display="block";
@@ -452,12 +554,12 @@ $("run").addEventListener("click", async ()=>{
   }
 });
 
-async function fetchLLMReview(text, jurisdiction, classification){
+async function fetchLLMReview(text, jurisdiction, classification, sophistication, useCase){
   try{
     const r = await fetch("/api/review", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ text, jurisdiction, classification })
+      body: JSON.stringify({ text, jurisdiction, classification, sophistication, useCase })
     });
     const data = await r.json();
     if(!r.ok){
@@ -465,6 +567,7 @@ async function fetchLLMReview(text, jurisdiction, classification){
       $("llmOut").innerHTML = `<div class="err-box">${escapeHtml((data.error || "The AI review layer is unavailable.") + detail)}</div>`;
       return;
     }
+    if(data.agent) $("llmSrc").textContent = "Groq · " + data.agent;
     renderLLM(data.findings || []);
   }catch(e){
     $("llmOut").innerHTML = `<div class="err-box">Could not reach the AI review layer: ${escapeHtml(String(e))}</div>`;
@@ -517,6 +620,81 @@ function renderRegister(results){
     </div>`).join("");
 }
 
+/* Historical tracker */
+async function saveHistory(draftText, riskInfo){
+  const counts = riskInfo.counts;
+  const verdict = counts.red ? "red" : counts.amber ? "amber" : "green";
+  try{
+    await fetch("/api/history", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        jurisdiction: curJur,
+        classification: curCls,
+        sophistication: curSoph,
+        useCase: curUseCase,
+        productDomicile: curDomicile,
+        riskScore: riskInfo.score,
+        verdict,
+        counts,
+        draft: draftText
+      })
+    });
+    loadHistory();
+  }catch(e){
+    console.warn("Could not save history:", e);
+  }
+}
+
+async function loadHistory(){
+  try{
+    const r = await fetch("/api/history");
+    const data = await r.json();
+    if(!r.ok){
+      $("histOut").innerHTML = `<div class="err-box">${escapeHtml(data.error || "History is unavailable.")}</div>`;
+      return;
+    }
+    renderHistory(data.records || []);
+  }catch(e){
+    $("histOut").innerHTML = `<div class="err-box">Could not reach the history store: ${escapeHtml(String(e))}</div>`;
+  }
+}
+
+function renderHistory(records){
+  if(!records.length){
+    $("histOut").innerHTML = `<div class="muted-note">No reviews recorded yet. Run one above and it will appear here.</div>`;
+    return;
+  }
+  const rows = records.map(r=>{
+    const d = new Date(r.ts);
+    const when = isNaN(d) ? (r.ts||"") : d.toLocaleString();
+    const c = r.counts||{};
+    return `
+      <tr>
+        <td class="mono">${escapeHtml(when)}</td>
+        <td>${escapeHtml((JUR[r.jurisdiction]&&JUR[r.jurisdiction].name) || r.jurisdiction || "")}</td>
+        <td>${r.classification==="retail"?"Retail":"Professional"}</td>
+        <td>${escapeHtml(SOPH_LABEL[r.sophistication]||"—")}</td>
+        <td>${escapeHtml(USECASE_LABEL[r.useCase]||"—")}</td>
+        <td><span class="hist-badge ${r.verdict}">${escapeHtml(r.verdict||"")}</span></td>
+        <td class="mono">${r.riskScore!=null?r.riskScore:"—"}</td>
+        <td class="mono">${c.red||0}R / ${c.amber||0}A / ${c.green||0}G</td>
+        <td class="hist-snippet">${escapeHtml(r.snippet||"")}${(r.snippet||"").length>=120?"…":""}</td>
+      </tr>`;
+  }).join("");
+
+  $("histOut").innerHTML = `
+    <table class="hist-table">
+      <thead><tr>
+        <th>Time</th><th>Jurisdiction</th><th>Client</th><th>Sophistication</th><th>Use case</th>
+        <th>Verdict</th><th>Risk</th><th>Findings</th><th>Draft snippet</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+$("refreshHist").addEventListener("click", loadHistory);
+
 $("clear").addEventListener("click",()=>{
   $("draft").value="";
   $("out").innerHTML=`<div class="empty"><div>Cleared. Paste a new draft to review.</div></div>`;
@@ -528,7 +706,9 @@ document.querySelectorAll(".chip").forEach(c=>{
   c.addEventListener("click",()=>{ $("draft").value=SAMPLES[c.dataset.s]; });
 });
 
-$("rulecount").textContent = `Knowledge base: ${RULES.length} rule families × ${Object.keys(JUR).length} jurisdictions loaded.`;
+$("rulecount").textContent = `Knowledge base: ${RULES.length} rule families + 1 perimeter check × ${Object.keys(JUR).length} jurisdictions loaded.`;
+
+loadHistory(); // populate the tracker on page load
 </script>
 </body>
 </html>
