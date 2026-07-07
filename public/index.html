@@ -11,7 +11,7 @@
     --panel:#ffffff;
     --line:#d9d2c4;
     --muted:#6b7a82;
-    --brass:#b3892f;      /* signature accent */
+    --brass:#b3892f;
     --brass-soft:#ede1c4;
     --red:#b23a3a;   --red-bg:#f7e6e4;
     --amber:#b8860b; --amber-bg:#f8efd6;
@@ -24,7 +24,6 @@
   .mono{font-family:"SFMono-Regular",ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;}
   .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px;}
 
-  /* Masthead */
   header.mast{border-bottom:2px solid var(--ink);margin:0 0 26px;padding:26px 0 16px;}
   .mast-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;}
   .brand{display:flex;align-items:baseline;gap:14px;}
@@ -35,7 +34,6 @@
     color:var(--muted);}
   .tagline{margin:8px 0 0;color:var(--muted);font-size:15px;max-width:60ch;}
 
-  /* Layout */
   .grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start;}
   @media(max-width:840px){.grid{grid-template-columns:1fr;}}
 
@@ -46,9 +44,9 @@
 
   label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
     color:var(--muted);margin:0 0 6px;font-family:var(--mono);}
-  select,textarea{width:100%;border:1px solid var(--line);background:#fbf9f4;color:var(--ink);
+  select,textarea,input[type="text"]{width:100%;border:1px solid var(--line);background:#fbf9f4;color:var(--ink);
     font-size:15px;padding:10px 12px;border-radius:2px;font-family:inherit;}
-  select:focus,textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:var(--brass);}
+  select:focus,textarea:focus,input:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:var(--brass);}
   textarea{min-height:230px;resize:vertical;line-height:1.5;}
   .field{margin-bottom:16px;}
 
@@ -65,7 +63,6 @@
     background:#fbf9f4;padding:6px 9px;border-radius:2px;cursor:pointer;color:var(--muted);}
   .chip:hover{border-color:var(--brass);color:var(--ink);}
 
-  /* Results */
   .scorebar{display:flex;align-items:center;gap:16px;padding:16px 18px;border-bottom:1px solid var(--line);}
   .verdict{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
     padding:6px 12px;border-radius:2px;font-weight:600;white-space:nowrap;}
@@ -102,7 +99,6 @@
     padding-top:14px;line-height:1.5;}
   .rulecount{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:10px;letter-spacing:.05em;}
 
-  /* Layer sections (deterministic / AI / live register) */
   .layer{margin-top:22px;}
   .layer-head{display:flex;align-items:center;gap:10px;padding:12px 18px;border-top:2px solid var(--ink);
     background:#fbf9f4;}
@@ -123,7 +119,7 @@
   .reg-status{font-family:var(--mono);font-size:11px;text-transform:uppercase;padding:2px 8px;border-radius:2px;}
   .reg-status.authorised{background:var(--green-bg);color:var(--green);}
   .reg-status.other{background:var(--amber-bg);color:var(--amber);}
-  .err-box{background:var(--red-bg);color:var(--red);padding:10px 12px;font-size:13.5px;border-radius:2px;}
+  .err-box{background:var(--red-bg);color:var(--red);padding:10px 12px;font-size:13.5px;border-radius:2px;word-break:break-word;}
 </style>
 </head>
 <body>
@@ -142,7 +138,7 @@
           <h1>Guard<span class="sub">Agent</span></h1>
         </div>
       </div>
-      <div class="kicker">Prototype · v0.1</div>
+      <div class="kicker">Prototype · v0.2</div>
     </div>
     <p class="tagline">Screen client-facing FX &amp; rates commentary against cross-border
       marketing rules before you hit send. Pick the client's jurisdiction and classification,
@@ -208,7 +204,7 @@
         <div class="layer-head">
           <span class="tag">Layer 2</span>
           <h3>AI Semantic Review</h3>
-          <span class="src">Groq · Llama 3.3 70B</span>
+          <span class="src">Groq · GPT-OSS 120B</span>
         </div>
         <div class="layer-body" id="llmOut"></div>
       </div>
@@ -238,12 +234,7 @@
 </div>
 
 <script>
-/* ─────────────────────────────────────────────────────────────
-   REGULATORY KNOWLEDGE BASE (illustrative)
-   Each rule = a pattern + the jurisdictions/classes it applies to.
-   In production this is a maintained RAG index; here it's deterministic
-   so the demo is fully reproducible offline.
-   ───────────────────────────────────────────────────────────── */
+/* REGULATORY KNOWLEDGE BASE (illustrative) — deterministic so the demo is reproducible offline */
 const JUR = {
   CH:{name:"Switzerland", reg:"FINMA (FinSA)"},
   DE:{name:"Germany",     reg:"BaFin (MiFID II)"},
@@ -252,11 +243,9 @@ const JUR = {
   SG:{name:"Singapore",   reg:"MAS"}
 };
 
-// helper: build case-insensitive regex from list of phrases
 const rx = (arr)=> new RegExp("("+arr.map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")","ig");
 
 const RULES = [
-  /* 1. Direct solicitation / recommendation of a product */
   {
     id:"solicit",
     pattern: rx(["we highly recommend","we recommend buying","you should buy","strongly advise you to buy",
@@ -271,8 +260,6 @@ const RULES = [
       ? "Reframe as general market commentary, or attach the locally approved prospectus / KID and route to Compliance for pre-clearance."
       : "Soften to non-advisory framing or confirm a documented suitability basis exists."
   },
-
-  /* 2. Structured / exotic product named without KID/prospectus */
   {
     id:"structured",
     pattern: rx(["structured note","dual currency","dual-currency","DCD","yield enhancement","yield-enhancement",
@@ -290,8 +277,6 @@ const RULES = [
       ? "Confirm a KID / PRIIPs document exists for this jurisdiction and link it; if none, remove the product reference for retail distribution."
       : "Confirm product is registered for professional distribution in-market and attach term sheet."
   },
-
-  /* 3. Yield / return mentioned without balancing risk language */
   {
     id:"unbalanced",
     pattern: rx(["yield","return of","returns of","% p.a.","percent per annum","coupon","interest rate of",
@@ -299,14 +284,12 @@ const RULES = [
     riskWords:["risk","volatility","capital at risk","may lose","downside","not guaranteed","past performance"],
     severity:{ retail:"amber", professional:"amber" },
     appliesTo:["UK","DE","FR","SG","CH"],
-    conditional:true, // only fires if riskWords absent
+    conditional:true,
     breach:(j,c)=> j==="UK"
       ? "FCA (Consumer Duty): return figures presented without a fair, clear and non-misleading balance of the associated risks."
       : `${JUR[j].reg}: yield/return highlighted without balanced risk presentation — promotion may be misleading.`,
     action:()=> "Insert the standard fixed-income / market-risk disclosure paragraph so benefits and risks are balanced."
   },
-
-  /* 4. Reverse-solicitation trap: outbound push into MiFID markets */
   {
     id:"reverse",
     pattern: rx(["reaching out","following up on our offer","as discussed, here is the product",
@@ -314,10 +297,8 @@ const RULES = [
     severity:{ retail:"red", professional:"amber" },
     appliesTo:["DE","FR"],
     breach:(j,c)=> `${JUR[j].reg}: outbound, bank-initiated contact undercuts any "reverse solicitation" defence. Cross-border provision of investment services into the EU without a passport/registration is restricted.`,
-    action:()=> "Confirm a valid cross-border licence/passport or an genuine client-initiated (reverse solicitation) basis; otherwise do not send outbound."
+    action:()=> "Confirm a valid cross-border licence/passport or a genuine client-initiated (reverse solicitation) basis; otherwise do not send outbound."
   },
-
-  /* 5. Missing disclaimer entirely (whole-document check) */
   {
     id:"nodisclaimer",
     whole:true,
@@ -331,7 +312,6 @@ const RULES = [
   }
 ];
 
-/* SAMPLES */
 const SAMPLES = {
 1:`Dear Mr. Weber,
 
@@ -351,7 +331,6 @@ The Swiss National Bank held its policy rate unchanged at its latest meeting, ci
 This is a marketing communication and not investment advice. Capital at risk.`
 };
 
-/* ENGINE */
 function review(text, jur, cls){
   const findings=[];
   const lower=text.toLowerCase();
@@ -359,7 +338,6 @@ function review(text, jur, cls){
   for(const r of RULES){
     if(!r.appliesTo.includes(jur)) continue;
 
-    // whole-document disclaimer check
     if(r.whole){
       const has = r.disclaimerCues.some(c=>lower.includes(c));
       if(!has){
@@ -371,18 +349,15 @@ function review(text, jur, cls){
     const matches = text.match(r.pattern);
     if(!matches) continue;
 
-    // conditional rule: only fire if the balancing risk words are absent
     if(r.conditional){
       const balanced = r.riskWords.some(w=>lower.includes(w));
       if(balanced) continue;
     }
 
-    // dedupe trigger phrase, take first hit
     const trig = matches[0];
     findings.push(mk(r, trig, jur, cls));
   }
 
-  // Always surface a green "clean" line if genuinely nothing serious fired
   if(!findings.some(f=>f.sev==="red"||f.sev==="amber")){
     findings.push({
       sev:"green",
@@ -405,7 +380,6 @@ function mk(rule, trigger, jur, cls){
   };
 }
 
-/* RENDER */
 const SEV_LABEL={red:"High Risk",amber:"Medium Risk",green:"Low Risk"};
 const SEV_RANK={red:0,amber:1,green:2};
 
@@ -448,7 +422,6 @@ function render(findings){
 
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 
-/* WIRING */
 let curJur="CH", curCls="retail";
 const $=id=>document.getElementById(id);
 
@@ -464,15 +437,12 @@ $("run").addEventListener("click", async ()=>{
     return;
   }
 
-  // Layer 1: deterministic rule engine — instant, fully offline
   render(review(text,curJur,curCls));
 
-  // Layer 2: AI semantic review (server-side call, key never touches the browser)
   $("llmLayer").style.display="block";
   $("llmOut").innerHTML = `<div class="spinner-line">Running semantic review…</div>`;
   fetchLLMReview(text, curJur, curCls);
 
-  // Layer 3: live FCA register check — only if a firm name was given
   if(firm){
     $("regLayer").style.display="block";
     $("regOut").innerHTML = `<div class="spinner-line">Querying FCA register…</div>`;
@@ -491,12 +461,13 @@ async function fetchLLMReview(text, jurisdiction, classification){
     });
     const data = await r.json();
     if(!r.ok){
-      $("llmOut").innerHTML = `<div class="err-box">${escapeHtml(data.error || "The AI review layer is unavailable.")}</div>`;
+      const detail = data.detail ? " — " + data.detail : "";
+      $("llmOut").innerHTML = `<div class="err-box">${escapeHtml((data.error || "The AI review layer is unavailable.") + detail)}</div>`;
       return;
     }
     renderLLM(data.findings || []);
   }catch(e){
-    $("llmOut").innerHTML = `<div class="err-box">Could not reach the AI review layer. It may not be deployed yet — see README.</div>`;
+    $("llmOut").innerHTML = `<div class="err-box">Could not reach the AI review layer: ${escapeHtml(String(e))}</div>`;
   }
 }
 
@@ -523,12 +494,13 @@ async function fetchRegisterCheck(firmName){
     });
     const data = await r.json();
     if(!r.ok){
-      $("regOut").innerHTML = `<div class="err-box">${escapeHtml(data.error || "The register check is unavailable.")}</div>`;
+      const detail = data.detail ? " — " + data.detail : "";
+      $("regOut").innerHTML = `<div class="err-box">${escapeHtml((data.error || "The register check is unavailable.") + detail)}</div>`;
       return;
     }
     renderRegister(data.results || []);
   }catch(e){
-    $("regOut").innerHTML = `<div class="err-box">Could not reach the register check. It may not be deployed yet — see README.</div>`;
+    $("regOut").innerHTML = `<div class="err-box">Could not reach the register check: ${escapeHtml(String(e))}</div>`;
   }
 }
 
@@ -548,6 +520,8 @@ function renderRegister(results){
 $("clear").addEventListener("click",()=>{
   $("draft").value="";
   $("out").innerHTML=`<div class="empty"><div>Cleared. Paste a new draft to review.</div></div>`;
+  $("llmLayer").style.display="none";
+  $("regLayer").style.display="none";
 });
 
 document.querySelectorAll(".chip").forEach(c=>{
