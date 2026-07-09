@@ -714,6 +714,7 @@ function render(findings, riskInfo){
           <div class="reg">${f.reg}</div>
           <div class="breach">${escapeHtml(f.breach)}</div>
           ${f.action ? `<div class="action">${escapeHtml(f.action)}</div>`:""}
+          ${isRealPhrase ? `<button class="rewrite-btn" data-phrase="${escapeHtml(f.trigger)}" data-target="${rid}" onclick="suggestRewrite(this)">Suggest compliant rewrite</button><div id="${rid}"></div>`:""}
         </div>
       </div>`;
   }
@@ -722,24 +723,19 @@ function render(findings, riskInfo){
 
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 
-  body: JSON.stringify({
-    phrase,
-    jurisdiction: curJur
-  })
-});
-
-const text = await r.text();
-
-let data;
-try {
-  data = JSON.parse(text);
-} catch {
-  throw new Error(
-    `Rewrite service returned HTML instead of JSON.\n\n` +
-    `Status: ${r.status}\n` +
-    `Body:\n${text.substring(0,300)}`
-  );
-}
+async function suggestRewrite(btn){
+  const phrase = btn.getAttribute("data-phrase");
+  const target = document.getElementById(btn.getAttribute("data-target"));
+  if(!target) return;
+  target.innerHTML = `<div class="spinner-line" style="margin-top:8px;">Finding a compliant alternative…</div>`;
+  btn.disabled = true;
+  try{
+    const r = await fetch("/api/suggest-rewrite", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ phrase, jurisdiction: curJur })
+    });
+    const data = await r.json();
     btn.disabled = false;
     if(!r.ok){
       const detail = data.detail ? " — " + data.detail : "";
