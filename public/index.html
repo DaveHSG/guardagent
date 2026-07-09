@@ -135,8 +135,53 @@
   .hist-badge.red{background:var(--red-bg);color:var(--red);}
   .hist-badge.amber{background:var(--amber-bg);color:var(--amber);}
   .hist-badge.green{background:var(--green-bg);color:var(--green);}
+  .fb-btn{border:1px solid var(--line);background:#fbf9f4;cursor:pointer;border-radius:2px;
+    padding:2px 7px;font-size:12px;line-height:1;color:var(--muted);}
+  .fb-btn:hover{border-color:var(--brass);color:var(--ink);}
+  .fb-btn.active-up{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+  .fb-btn.active-down{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+  .fb-btn.active-gold{background:var(--brass-soft);border-color:var(--brass);color:#5b451c;}
+  .fb-group{display:flex;gap:4px;align-items:center;}
+  .outcome-sel{font-size:11px;padding:3px 4px;border:1px solid var(--line);background:#fbf9f4;
+    border-radius:2px;font-family:var(--mono);color:var(--ink);}
+  .examples-note{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:#5b451c;
+    background:var(--brass-soft);padding:3px 8px;border-radius:2px;}
+  .rewrite-btn{margin-top:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+    text-transform:uppercase;border:1px solid var(--brass);background:transparent;color:#5b451c;
+    padding:5px 10px;border-radius:2px;cursor:pointer;}
+  .rewrite-btn:hover{background:var(--brass-soft);}
+  .rewrite-box{margin-top:8px;background:var(--green-bg);border-left:3px solid var(--green);
+    padding:8px 12px;border-radius:2px;font-size:14px;}
+  .rewrite-box .rw-label{font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--green);margin-bottom:4px;}
+  .rewrite-box.ai{background:var(--amber-bg);border-color:var(--amber);}
+  .rewrite-box.ai .rw-label{color:var(--amber);}
+  .rewrite-box .rw-sugg{font-style:italic;color:var(--ink);}
+  .rewrite-box .rw-note{font-size:12px;color:var(--muted);margin-top:5px;}
   .hist-snippet{color:var(--muted);font-style:italic;max-width:260px;}
   .hist-scroll{max-width:100%;overflow-x:auto;}
+
+  .calib-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .calib-table th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--ink);
+    white-space:nowrap;}
+  .calib-table td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  .calib-metric{font-family:var(--mono);font-size:13px;}
+  .calib-metric.na{color:var(--muted);}
+  .posture-sel{font-size:12px;padding:4px 6px;border:1px solid var(--line);background:#fbf9f4;
+    border-radius:2px;font-family:var(--mono);color:var(--ink);}
+  .posture-sel.strict{border-color:var(--red);color:var(--red);}
+  .posture-sel.lenient{border-color:var(--amber);color:var(--amber);}
+  .posture-note{font-family:var(--mono);font-size:10px;color:var(--green);margin-left:6px;}
+  .posture-tag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+    padding:2px 7px;border-radius:2px;background:var(--brass-soft);color:#5b451c;display:inline-block;
+    margin-top:4px;}
+
+  .ml-box{padding:4px 0;}
+  .ml-prob{font-family:var(--mono);font-size:28px;font-weight:600;color:var(--ink);}
+  .ml-prob-label{font-size:13px;color:var(--muted);margin-top:2px;}
+  .ml-meta{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px;}
+  .ml-untrained{color:var(--muted);font-size:14px;}
 </style>
 </head>
 <body>
@@ -273,6 +318,15 @@
         <div class="layer-body" id="regOut"></div>
       </div>
 
+      <div class="layer" id="mlLayer" style="display:none;">
+        <div class="layer-head">
+          <span class="tag">ML Model</span>
+          <h3>Learned Override Prediction</h3>
+          <span class="src">Logistic regression, trained on this bank's history</span>
+        </div>
+        <div class="layer-body ml-box" id="mlOut"></div>
+      </div>
+
       <div class="layer">
         <div class="layer-head">
           <span class="tag">Tracker</span>
@@ -280,6 +334,16 @@
           <button class="btn small" id="refreshHist">Refresh</button>
         </div>
         <div class="layer-body hist-scroll" id="histOut"></div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-head">
+          <span class="tag">Calibration</span>
+          <h3>Institutional posture (read-only insight + human-set posture)</h3>
+          <button class="btn small" id="trainModel">Train ML model</button>
+          <button class="btn small" id="refreshCalib">Refresh</button>
+        </div>
+        <div class="layer-body hist-scroll" id="calibOut"></div>
       </div>
     </section>
   </div>
@@ -314,15 +378,9 @@ const rx = (arr)=> new RegExp("("+arr.map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\
 const RULES = [
   {
     id:"solicit",
-   pattern: rx(["we highly recommend","we recommend buying","you should buy","strongly advise you to buy",
+    pattern: rx(["we highly recommend","we recommend buying","you should buy","strongly advise you to buy",
                  "we advise buying","act now","buy our new","invest now","don't miss","limited-time offer",
-                 "guaranteed return","guaranteed yield","risk-free","don't wait","hurry","while stocks last",
-                 "seize the opportunity","secure your allocation","reserve your spot","join now","sign up today",
-                 "take advantage now","before it's too late","exclusive offer","special offer just for you",
-                 "we suggest you invest","our top pick","must-buy","best-in-class opportunity","unmissable",
-                 "once in a lifetime","don't hesitate","time-sensitive opportunity","final call","closing soon",
-                 "book your allocation","this is the moment","perfect time to invest","ideal entry point",
-                 "why wait","grab this opportunity"]),
+                 "guaranteed return","guaranteed yield","risk-free"]),
     severity:{ retail:"red", professional:"amber" },
     appliesTo:["CH","DE","FR","UK","SG"],
     breach:(j,c)=> c==="retail"
@@ -336,14 +394,7 @@ const RULES = [
     id:"structured",
     pattern: rx(["structured note","dual currency","dual-currency","DCD","yield enhancement","yield-enhancement",
                  "autocallable","reverse convertible","barrier option","exotic","accumulator","range accrual",
-                 "capital protected note","structured product","phoenix note","worst-of note","best-of note",
-                 "callable note","bonus certificate","tracker certificate","participation certificate",
-                 "leveraged certificate","turbo warrant","knock-out product","knock-in barrier","digital option",
-                 "binary option","twin-win","airbag certificate","outperformance certificate","express certificate",
-                 "memory coupon","snowball note","target redemption note","TARN","credit-linked note",
-                 "equity-linked note","commodity-linked note","fx-linked note","leveraged fx product",
-                 "contract for difference","CFD","warrant","convertible bond","hybrid capital instrument",
-                 "AT1 bond","contingent convertible","CoCo bond"]),
+                 "capital protected note","structured product"]),
     severity:{ retail:"red", professional:"amber" },
     appliesTo:["DE","FR","UK","SG","CH"],
     breach:(j,c)=>{
@@ -358,13 +409,8 @@ const RULES = [
   },
   {
     id:"unbalanced",
-pattern: rx(["yield","return of","returns of","% p.a.","percent per annum","coupon","interest rate of",
-                 "attractive returns","enhanced yield","high yield","double-digit return","outsized return",
-                 "premium yield","superior returns","market-beating","outperform the market",
-                 "annualised return of","projected return","expected return of","target return","yield pickup",
-                 "carry trade opportunity","income boost","steady income stream","reliable income",
-                 "consistent returns","strong track record","impressive performance","top-tier performance",
-                 "best performing fund"]),
+    pattern: rx(["yield","return of","returns of","% p.a.","percent per annum","coupon","interest rate of",
+                 "attractive returns","enhanced yield","high yield"]),
     riskWords:["risk","volatility","capital at risk","may lose","downside","not guaranteed","past performance"],
     severity:{ retail:"amber", professional:"amber" },
     appliesTo:["UK","DE","FR","SG","CH"],
@@ -376,14 +422,8 @@ pattern: rx(["yield","return of","returns of","% p.a.","percent per annum","coup
   },
   {
     id:"reverse",
-   pattern: rx(["reaching out","following up on our offer","as discussed, here is the product",
-                 "we wanted to introduce","please find our product offer","proactively",
-                 "we thought you'd be interested","given your profile we suggest","tailored specifically for you",
-                 "based on your portfolio we recommend","we've selected this for you","exclusively curated for you",
-                 "we identified this opportunity for you","wanted to flag this opportunity to you",
-                 "thought of you when we saw this","given your risk profile","customised proposal for you",
-                 "personal recommendation for you","circling back with our recommendation",
-                 "as promised, here is the offer"]),
+    pattern: rx(["reaching out","following up on our offer","as discussed, here is the product",
+                 "we wanted to introduce","please find our product offer","proactively"]),
     severity:{ retail:"red", professional:"amber" },
     appliesTo:["DE","FR"],
     breach:(j,c)=> `${JUR[j].reg}: outbound, bank-initiated contact undercuts any "reverse solicitation" defence. Cross-border provision of investment services into the EU without a passport/registration is restricted.`,
@@ -392,15 +432,9 @@ pattern: rx(["yield","return of","returns of","% p.a.","percent per annum","coup
   {
     id:"nodisclaimer",
     whole:true,
-disclaimerCues:["for professional","not investment advice","for information only","capital at risk",
+    disclaimerCues:["for professional","not investment advice","for information only","capital at risk",
                     "risk disclosure","past performance is not","this is a marketing communication",
-                    "not a recommendation","suitable only for professional clients","please read the prospectus",
-                    "please read the key information document","consult your financial advisor",
-                    "seek independent advice","value of investments can go down",
-                    "you may not get back the full amount invested","this product is complex",
-                    "eligible counterparty","restricted to qualified investors","not suitable for retail clients",
-                    "for institutional use only","prospectus available upon request",
-                    "full terms and conditions apply","target market assessment"],
+                    "not a recommendation"],
     severity:{ retail:"amber", professional:"green" },
     appliesTo:["CH","DE","FR","UK","SG"],
     breach:(j,c)=> `${JUR[j].reg}: no marketing-communication disclaimer or advice disclaimer detected in the document.`,
@@ -532,7 +566,10 @@ function render(findings, riskInfo){
       </span>
     </div>`;
 
+  let idx=0;
   for(const f of findings){
+    const isRealPhrase = f.trigger && !f.trigger.startsWith("(");
+    const rid = "rw-"+(idx++);
     html += `
       <div class="finding">
         <div class="rail ${f.sev}"></div>
@@ -542,6 +579,7 @@ function render(findings, riskInfo){
           <div class="reg">${f.reg}</div>
           <div class="breach">${escapeHtml(f.breach)}</div>
           ${f.action ? `<div class="action">${escapeHtml(f.action)}</div>`:""}
+          ${isRealPhrase ? `<button class="rewrite-btn" data-phrase="${escapeHtml(f.trigger)}" data-target="${rid}" onclick="suggestRewrite(this)">Suggest compliant rewrite</button><div id="${rid}"></div>`:""}
         </div>
       </div>`;
   }
@@ -549,6 +587,43 @@ function render(findings, riskInfo){
 }
 
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+
+async function suggestRewrite(btn){
+  const phrase = btn.getAttribute("data-phrase");
+  const target = document.getElementById(btn.getAttribute("data-target"));
+  if(!target) return;
+  target.innerHTML = `<div class="spinner-line" style="margin-top:8px;">Finding a compliant alternative…</div>`;
+  btn.disabled = true;
+  try{
+    const r = await fetch("/api/suggest-rewrite", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ phrase, jurisdiction: curJur })
+    });
+    const data = await r.json();
+    btn.disabled = false;
+    if(!r.ok){
+      const detail = data.detail ? " — " + data.detail : "";
+      target.innerHTML = `<div class="err-box" style="margin-top:8px;">${escapeHtml((data.error||"Rewrite unavailable")+detail)}</div>`;
+      return;
+    }
+    if(!data.suggestion){
+      target.innerHTML = `<div class="muted-note" style="margin-top:8px;">${escapeHtml(data.note||"No suggestion available for this phrase.")}</div>`;
+      return;
+    }
+    const isAI = data.source === "ai";
+    target.innerHTML = `
+      <div class="rewrite-box ${isAI?"ai":""}">
+        <div class="rw-label">${isAI?"AI-proposed rewrite (unreviewed)":"Curated compliant rewrite"}</div>
+        <div class="rw-sugg">“${escapeHtml(data.suggestion)}”</div>
+        ${data.rationale?`<div class="rw-note">${escapeHtml(data.rationale)}</div>`:""}
+        <div class="rw-note">${escapeHtml(data.note||"")} A human must approve before use.</div>
+      </div>`;
+  }catch(e){
+    btn.disabled = false;
+    target.innerHTML = `<div class="err-box" style="margin-top:8px;">Could not reach the rewrite service: ${escapeHtml(String(e))}</div>`;
+  }
+}
 
 let curJur="CH", curCls="retail", curSoph="experienced", curUseCase="newsletter", curDomicile="NA";
 const $=id=>document.getElementById(id);
@@ -582,7 +657,41 @@ $("run").addEventListener("click", async ()=>{
   } else {
     $("regLayer").style.display="none";
   }
+
+  const flagged = riskInfo.counts.red>0 || riskInfo.counts.amber>0;
+  if(flagged){
+    $("mlLayer").style.display="block";
+    $("mlOut").innerHTML = `<div class="spinner-line">Scoring against the trained model…</div>`;
+    fetchMLPrediction(curJur, curSoph, curUseCase, riskInfo.score);
+  } else {
+    $("mlLayer").style.display="none";
+  }
 });
+
+async function fetchMLPrediction(jurisdiction, sophistication, useCase, riskScore){
+  try{
+    const r = await fetch("/api/ml-model", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"predict", jurisdiction, sophistication, useCase, riskScore })
+    });
+    const data = await r.json();
+    if(!r.ok){
+      $("mlOut").innerHTML = `<div class="err-box">${escapeHtml(data.error || "Prediction unavailable.")}</div>`;
+      return;
+    }
+    if(!data.available){
+      $("mlOut").innerHTML = `<div class="ml-untrained">${escapeHtml(data.message || "No trained model yet.")} Train one in the Calibration panel below once you have enough rated reviews.</div>`;
+      return;
+    }
+    $("mlOut").innerHTML = `
+      <div class="ml-prob">${data.overrideProbability}%</div>
+      <div class="ml-prob-label">predicted probability this flag gets overridden (sent unchanged) at this institution, for this jurisdiction / sophistication / use case combination</div>
+      <div class="ml-meta">Model trained on ${data.nSamples} labeled past reviews · training accuracy ${data.trainingAccuracy}% · last trained ${new Date(data.trainedAt).toLocaleString()}</div>`;
+  }catch(e){
+    $("mlOut").innerHTML = `<div class="err-box">Could not reach the ML model service: ${escapeHtml(String(e))}</div>`;
+  }
+}
 
 async function fetchLLMReview(text, jurisdiction, classification, sophistication, useCase){
   try{
@@ -598,24 +707,31 @@ async function fetchLLMReview(text, jurisdiction, classification, sophistication
       return;
     }
     if(data.agent) $("llmSrc").textContent = "Groq · " + data.agent;
-    renderLLM(data.findings || []);
+    if(typeof data.examplesUsed === "number" && data.examplesUsed > 0){
+      $("llmOut").innerHTML = `<div class="examples-note" style="margin-bottom:10px;display:inline-block;">↺ Calibrated with ${data.examplesUsed} human-curated example${data.examplesUsed>1?"s":""} from past reviews</div>`;
+      renderLLM(data.findings || [], true);
+    } else {
+      renderLLM(data.findings || []);
+    }
   }catch(e){
     $("llmOut").innerHTML = `<div class="err-box">Could not reach the AI review layer: ${escapeHtml(String(e))}</div>`;
   }
 }
 
-function renderLLM(findings){
+function renderLLM(findings, appendMode){
   if(!findings.length){
-    $("llmOut").innerHTML = `<div class="muted-note">No additional risks surfaced beyond the rule engine's findings.</div>`;
+    const msg = `<div class="muted-note">No additional risks surfaced beyond the rule engine's findings.</div>`;
+    if(appendMode) $("llmOut").innerHTML += msg; else $("llmOut").innerHTML = msg;
     return;
   }
   const rank={red:0,amber:1,green:2};
   findings.sort((a,b)=>(rank[a.severity]??3)-(rank[b.severity]??3));
-  $("llmOut").innerHTML = findings.map(f=>`
+  const html = findings.map(f=>`
     <div class="llm-item ${f.severity||""}">
       <div class="llm-obs">${escapeHtml(f.observation||"")}</div>
       <div class="llm-reason">${escapeHtml(f.reason||"")}</div>
     </div>`).join("");
+  if(appendMode) $("llmOut").innerHTML += html; else $("llmOut").innerHTML = html;
 }
 
 async function fetchRegisterCheck(firmName){
@@ -699,6 +815,10 @@ function renderHistory(records){
     const d = new Date(r.ts);
     const when = isNaN(d) ? (r.ts||"") : d.toLocaleString();
     const c = r.counts||{};
+    const up = r.feedback==="up" ? "active-up" : "";
+    const down = r.feedback==="down" ? "active-down" : "";
+    const gold = r.gold ? "active-gold" : "";
+    const oc = r.outcome || "";
     return `
       <tr>
         <td class="mono">${escapeHtml(when)}</td>
@@ -709,6 +829,19 @@ function renderHistory(records){
         <td><span class="hist-badge ${r.verdict}">${escapeHtml(r.verdict||"")}</span></td>
         <td class="mono">${r.riskScore!=null?r.riskScore:"—"}</td>
         <td class="mono">${c.red||0}R / ${c.amber||0}A / ${c.green||0}G</td>
+        <td>
+          <div class="fb-group">
+            <button class="fb-btn ${up}" title="Useful review" onclick="sendFeedback('${r.id}','feedback','up')">▲</button>
+            <button class="fb-btn ${down}" title="Not useful" onclick="sendFeedback('${r.id}','feedback','down')">▼</button>
+            <select class="outcome-sel" title="What happened to the draft" onchange="sendFeedback('${r.id}','outcome',this.value)">
+              <option value=""${oc===""?" selected":""}>outcome…</option>
+              <option value="sent"${oc==="sent"?" selected":""}>sent as-is</option>
+              <option value="amended"${oc==="amended"?" selected":""}>amended</option>
+              <option value="rejected"${oc==="rejected"?" selected":""}>rejected</option>
+            </select>
+            <button class="fb-btn ${gold}" title="Mark as gold example for AI few-shot" onclick="sendFeedback('${r.id}','gold',${r.gold?"false":"true"})">★</button>
+          </div>
+        </td>
         <td class="hist-snippet">${escapeHtml(r.snippet||"")}${(r.snippet||"").length>=120?"…":""}</td>
       </tr>`;
   }).join("");
@@ -717,19 +850,155 @@ function renderHistory(records){
     <table class="hist-table">
       <thead><tr>
         <th>Time</th><th>Jurisdiction</th><th>Client</th><th>Sophistication</th><th>Use case</th>
-        <th>Verdict</th><th>Risk</th><th>Findings</th><th>Draft snippet</th>
+        <th>Verdict</th><th>Risk</th><th>Findings</th><th>Feedback</th><th>Draft snippet</th>
       </tr></thead>
       <tbody>${rows}</tbody>
-    </table>`;
+    </table>
+    <div class="muted-note" style="margin-top:10px;">▲/▼ rate the review · set the real outcome · ★ marks a case as a gold example that calibrates future AI reviews in that jurisdiction. Curation is human-controlled — nothing retrains automatically.</div>`;
+}
+
+async function sendFeedback(id, field, value){
+  const body = { id };
+  if(field==="feedback") body.feedback = value;
+  else if(field==="outcome") body.outcome = value === "" ? null : value;
+  else if(field==="gold") body.gold = (value === true || value === "true");
+  try{
+    const r = await fetch("/api/history", {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(body)
+    });
+    if(!r.ok){
+      const data = await r.json().catch(()=>({}));
+      alert("Could not save feedback: " + (data.error || r.status));
+      return;
+    }
+    loadHistory(); // refresh to reflect the new state
+  }catch(e){
+    alert("Could not reach the history store: " + e);
+  }
 }
 
 $("refreshHist").addEventListener("click", loadHistory);
+
+/* Calibration dashboard */
+const JUR_ORDER = ["CH","DE","FR","UK","SG"];
+
+async function loadCalibration(){
+  try{
+    const r = await fetch("/api/calibration");
+    const data = await r.json();
+    if(!r.ok){
+      $("calibOut").innerHTML = `<div class="err-box">${escapeHtml(data.error || "Calibration data is unavailable.")}</div>`;
+      return;
+    }
+    renderCalibration(data.stats, data.postures, data.sampleSize);
+  }catch(e){
+    $("calibOut").innerHTML = `<div class="err-box">Could not reach the calibration service: ${escapeHtml(String(e))}</div>`;
+  }
+}
+
+function pct(v){ return v===null || v===undefined ? `<span class="calib-metric na">n/a</span>` : `<span class="calib-metric">${v}%</span>`; }
+
+function renderCalibration(stats, postures, sampleSize){
+  const rows = JUR_ORDER.map(j=>{
+    const s = stats[j] || {total:0,overrideRate:null,thumbsUpRate:null,flaggedCount:0,goldCount:0};
+    const posture = postures[j] || "standard";
+    return `
+      <tr>
+        <td><b>${escapeHtml((JUR[j]&&JUR[j].name)||j)}</b></td>
+        <td class="mono">${s.total}</td>
+        <td>${pct(s.overrideRate)} <span class="muted-note">(${s.flaggedCount} flagged)</span></td>
+        <td>${pct(s.thumbsUpRate)}</td>
+        <td class="mono">${s.goldCount}</td>
+        <td>
+          <select class="posture-sel ${posture!=='standard'?posture:''}" onchange="setPosture('${j}', this.value)">
+            <option value="standard"${posture==='standard'?' selected':''}>Standard</option>
+            <option value="strict"${posture==='strict'?' selected':''}>Strict</option>
+            <option value="lenient"${posture==='lenient'?' selected':''}>Lenient</option>
+          </select>
+          <span id="posture-saved-${j}"></span>
+        </td>
+      </tr>`;
+  }).join("");
+
+  $("calibOut").innerHTML = `
+    <table class="calib-table">
+      <thead><tr>
+        <th>Jurisdiction</th><th>Reviews (sample)</th><th>Override rate</th>
+        <th>Thumbs-up rate</th><th>Gold examples</th><th>Posture</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="muted-note" style="margin-top:10px;">
+      Based on the last ${sampleSize} logged reviews. <b>Override rate</b> = % of red/amber-flagged
+      drafts that were sent unchanged anyway — a high rate may mean this jurisdiction's rules run
+      stricter than this institution's actual risk appetite. Nothing here changes AI behaviour
+      automatically: setting a posture is an explicit human decision, and it only takes effect on
+      the next review in that jurisdiction.
+    </div>`;
+}
+
+async function setPosture(jurisdiction, posture){
+  const savedEl = document.getElementById("posture-saved-"+jurisdiction);
+  try{
+    const r = await fetch("/api/calibration", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ jurisdiction, posture })
+    });
+    if(!r.ok){
+      const data = await r.json().catch(()=>({}));
+      alert("Could not save posture: " + (data.error || r.status));
+      return;
+    }
+    if(savedEl){
+      savedEl.innerHTML = ` <span class="posture-note">✓ saved</span>`;
+      setTimeout(()=>{ if(savedEl) savedEl.innerHTML=""; }, 2500);
+    }
+  }catch(e){
+    alert("Could not reach the calibration service: " + e);
+  }
+}
+
+$("refreshCalib").addEventListener("click", loadCalibration);
+
+$("trainModel").addEventListener("click", async ()=>{
+  const btn = $("trainModel");
+  const originalText = btn.textContent;
+  btn.textContent = "Training…";
+  btn.disabled = true;
+  try{
+    const r = await fetch("/api/ml-model", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"train" })
+    });
+    const data = await r.json();
+    btn.disabled = false;
+    btn.textContent = originalText;
+    if(!r.ok){
+      alert("Training failed: " + (data.error || r.status));
+      return;
+    }
+    if(!data.trained){
+      alert(data.message || "Not enough data to train yet.");
+      return;
+    }
+    alert(`Model trained on ${data.model.nSamples} labeled reviews (training accuracy ${data.model.trainingAccuracy}%). It will now be used for future predictions.`);
+  }catch(e){
+    btn.disabled = false;
+    btn.textContent = originalText;
+    alert("Could not reach the training service: " + e);
+  }
+});
 
 $("clear").addEventListener("click",()=>{
   $("draft").value="";
   $("out").innerHTML=`<div class="empty"><div>Cleared. Paste a new draft to review.</div></div>`;
   $("llmLayer").style.display="none";
   $("regLayer").style.display="none";
+  $("mlLayer").style.display="none";
 });
 
 document.querySelectorAll(".chip").forEach(c=>{
@@ -739,6 +1008,7 @@ document.querySelectorAll(".chip").forEach(c=>{
 $("rulecount").textContent = `Knowledge base: ${RULES.length} rule families + 1 perimeter check × ${Object.keys(JUR).length} jurisdictions loaded.`;
 
 loadHistory(); // populate the tracker on page load
+loadCalibration(); // populate the calibration dashboard on page load
 </script>
 </body>
 </html>
