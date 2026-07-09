@@ -731,11 +731,28 @@ async function suggestRewrite(btn){
   btn.disabled = true;
   try{
     const r = await fetch("/api/suggest-rewrite", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ phrase, jurisdiction: curJur })
-    });
-    const data = await r.json();
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    phrase,
+    jurisdiction: curJur
+  })
+});
+
+const text = await r.text();
+
+let data;
+try {
+  data = JSON.parse(text);
+} catch {
+  throw new Error(
+    `Rewrite service returned HTML instead of JSON.\n\n` +
+    `Status: ${r.status}\n` +
+    `Body:\n${text.substring(0,300)}`
+  );
+}
     btn.disabled = false;
     if(!r.ok){
       const detail = data.detail ? " — " + data.detail : "";
