@@ -314,9 +314,15 @@ const rx = (arr)=> new RegExp("("+arr.map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\
 const RULES = [
   {
     id:"solicit",
-    pattern: rx(["we highly recommend","we recommend buying","you should buy","strongly advise you to buy",
+   pattern: rx(["we highly recommend","we recommend buying","you should buy","strongly advise you to buy",
                  "we advise buying","act now","buy our new","invest now","don't miss","limited-time offer",
-                 "guaranteed return","guaranteed yield","risk-free"]),
+                 "guaranteed return","guaranteed yield","risk-free","don't wait","hurry","while stocks last",
+                 "seize the opportunity","secure your allocation","reserve your spot","join now","sign up today",
+                 "take advantage now","before it's too late","exclusive offer","special offer just for you",
+                 "we suggest you invest","our top pick","must-buy","best-in-class opportunity","unmissable",
+                 "once in a lifetime","don't hesitate","time-sensitive opportunity","final call","closing soon",
+                 "book your allocation","this is the moment","perfect time to invest","ideal entry point",
+                 "why wait","grab this opportunity"]),
     severity:{ retail:"red", professional:"amber" },
     appliesTo:["CH","DE","FR","UK","SG"],
     breach:(j,c)=> c==="retail"
