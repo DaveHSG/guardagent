@@ -55,6 +55,71 @@ const USE_CASE_GUIDANCE = {
   social: "This is a SOCIAL MEDIA post. These have the least room for nuance and the widest, least-controlled audience - apply strict scrutiny to any return figures or product mentions given the format's inherent lack of context.",
 };
 
+// --- Human-curated few-shot: pull up to 3 gold examples for this jurisdiction ---
+// These are past reviews a human explicitly marked as good exemplars. We read
+// them straight from Redis (same store as /api/history) and fold them into the
+// agent prompt. If Redis isn't configured, this silently returns none and the
+// review proceeds without examples.
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+const GOLD_KEY = "guardagent:gold";
+const RECORD_PREFIX = "guardagent:record:";
+const POSTURE_KEY = "guardagent:postures";
+
+const POSTURE_GUIDANCE = {
+  strict: "Compliance has explicitly set a STRICT posture for this jurisdiction. Apply the most conservative reading of ambiguous cases — flag borderline items that a standard reading might let pass.",
+  lenient: "Compliance has explicitly set a LENIENT posture for this jurisdiction, reflecting this institution's considered risk appetite. Continue to flag clear breaches, but give reasonable benefit of the doubt on genuinely ambiguous borderline phrasing rather than flagging every possible reading.",
+  standard: "",
+};
+
+async function getPosture(jurisdiction) {
+  if (!UPSTASH_URL || !UPSTASH_TOKEN) return "standard";
+  try {
+    const val = await redisCommand(["HGET", POSTURE_KEY, jurisdiction]);
+    return val && POSTURE_GUIDANCE[val] !== undefined ? val : "standard";
+  } catch (e) {
+    return "standard"; // never let posture-fetching break the actual review
+  }
+}
+
+async function redisCommand(command) {
+  const r = await fetch(UPSTASH_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify(command),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return (await r.json()).result;
+}
+
+async function getGoldExamples(jurisdiction) {
+  if (!UPSTASH_URL || !UPSTASH_TOKEN) return [];
+  try {
+    const goldIds = (await redisCommand(["SMEMBERS", GOLD_KEY])) || [];
+    const examples = [];
+    for (const id of goldIds) {
+      const raw = await redisCommand(["GET", RECORD_PREFIX + id]);
+      if (!raw) continue;
+      const rec = JSON.parse(raw);
+      if (rec.jurisdiction === jurisdiction) examples.push(rec);
+      if (examples.length >= 3) break;
+    }
+    return examples;
+  } catch (e) {
+    return []; // never let example-fetching break the actual review
+  }
+}
+
+function formatExamples(examples) {
+  if (!examples.length) return "";
+  const lines = examples.map((e) => {
+    const outcome = e.outcome ? `outcome: ${e.outcome}` : "outcome: n/a";
+    const fb = e.feedback === "up" ? "human approved this review" : e.feedback === "down" ? "human rejected this review" : "human reviewed";
+    return `- Draft snippet: "${(e.snippet || "").slice(0, 120)}" | verdict: ${e.verdict} | ${outcome} | ${fb}`;
+  });
+  return `\n\nHuman-curated examples from past reviews in this jurisdiction (use these to calibrate your judgement to how human compliance reviewers here actually decided):\n${lines.join("\n")}`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Use POST." });
@@ -85,6 +150,11 @@ export default async function handler(req, res) {
   const sophGuidance = SOPHISTICATION_GUIDANCE[sophistication] || SOPHISTICATION_GUIDANCE.experienced;
   const useCaseGuidance = USE_CASE_GUIDANCE[useCase] || USE_CASE_GUIDANCE.newsletter;
 
+  const goldExamples = await getGoldExamples(jurisdiction);
+  const examplesBlock = formatExamples(goldExamples);
+  const posture = await getPosture(jurisdiction);
+  const postureBlock = POSTURE_GUIDANCE[posture] ? `\n\n${POSTURE_GUIDANCE[posture]}` : "";
+
   const systemPrompt = `You are the ${agent.name}, a compliance pre-clearance specialist at a private bank reviewing draft client-facing marketing text for cross-border distribution risk in your jurisdiction only.
 
 Regulatory context: ${agent.rules}
@@ -95,7 +165,7 @@ Client sophistication: ${sophGuidance}
 
 Use case: ${useCaseGuidance}
 
-Client classification for this review: "${classification}".
+Client classification for this review: "${classification}".${postureBlock}${examplesBlock}
 
 You are a SECOND layer behind a deterministic keyword scanner. Do not repeat obvious keyword matches (e.g. don't just flag the word "yield" existing). Instead, look for things a keyword scanner would miss:
 - implied recommendations or urgency conveyed through tone rather than an exact phrase
@@ -144,7 +214,7 @@ If you find nothing beyond what a keyword scanner would already catch, return {"
       return;
     }
 
-    res.status(200).json({ findings: parsed.findings || [], agent: agent.name });
+    res.status(200).json({ findings: parsed.findings || [], agent: agent.name, examplesUsed: goldExamples.length, posture });
   } catch (err) {
     res.status(500).json({ error: "Unexpected server error", detail: String(err) });
   }
